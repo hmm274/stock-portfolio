@@ -7,6 +7,7 @@ import NotFound from './NotFound';
 import supabase from './SupabaseClient';
 import Signup from './Signup';
 import Login from './Login';
+import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -14,7 +15,6 @@ function App() {
   useEffect(() => {
     // Supabase Authentication Listener
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth State Changed:', event, session); // Debug log
       setUser(session?.user ?? null);
     });
 
@@ -25,8 +25,6 @@ function App() {
       }
     };
   }, []);
-
-  console.log('Current User:', user); // Debug log
 
   return (
     <div className="App">
