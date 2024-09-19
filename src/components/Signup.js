@@ -3,6 +3,7 @@ import supabase from './SupabaseClient';
 import {Link, useNavigate} from 'react-router-dom';
 
 const SignUp = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -11,29 +12,38 @@ const SignUp = () => {
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-    if(password!==confirmPassword){
-        setError("Passwords do not match");
-        return;
-    }
-    if(email===""||password===""||confirmPassword===""){
-        setError("Please fill out all fields");
-        return;
-    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
     });
-    if (error) setError(error.message);
-    else{
-        alert('Sign up successful! Please verify your email');
-        navigate('/');
-    };
+
+    if (error) {
+      setError(error.message);
+    } else {
+      // Store the user's name in the database
+      const { error: dbError } = await supabase
+        .from('users') // Make sure you have a 'users' table
+        .insert([{ name, email }]);
+
+      if (dbError) {
+        setError(dbError.message);
+      } else {
+        alert('Sign up successful!');
+        navigate('/'); // Redirect to home after successful signup
+      }
+    }
   };
 
   return (
     <div className="login-box">
         <form onSubmit={handleSignUp}>
         <h1>Welcome to your Stock Portfolio!</h1>
+        <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+        />
         <input
             type="email"
             placeholder="Email"
