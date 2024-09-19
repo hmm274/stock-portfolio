@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import Homepage from './Homepage';
-import Portfolio from './Portfolio';
-import StockDetails from './StockDetails';
-import NotFound from './NotFound';
-import supabase from './SupabaseClient';
-import Signup from './Signup';
-import Login from './Login';
+import Homepage from './components/Homepage';
+import Portfolio from './components/Portfolio';
+import StockDetails from './components/StockDetails';
+import NotFound from './components/NotFound';
+import supabase from './components/SupabaseClient';
+import Signup from './components/Signup';
+import Login from './components/Login';
 import './App.css';
 
 function App() {
