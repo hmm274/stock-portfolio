@@ -12,6 +12,8 @@ const SignUp = () => {
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+
+    // Sign up the user
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -20,10 +22,19 @@ const SignUp = () => {
     if (error) {
       setError(error.message);
     } else {
-      // Store the user's name in the database
+      // Retrieve the session user ID
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      const userId = userData?.user?.id; // Get the user ID from the session
+
+      if (userError) {
+        setError(userError.message);
+        return;
+      }
+
+      // Store the user's ID, name, and email in the database
       const { error: dbError } = await supabase
         .from('users') // Make sure you have a 'users' table
-        .insert([{ name, email }]);
+        .insert([{ id: userId, name, email }]); // Include the user ID in the insert
 
       if (dbError) {
         setError(dbError.message);
@@ -33,6 +44,7 @@ const SignUp = () => {
       }
     }
   };
+
 
   return (
     <div className="login-box">
