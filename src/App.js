@@ -30,9 +30,16 @@ function App() {
     <div className="App">
       <Router>
         <Routes>
-          <Route path="/" element={<Homepage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route 
+            path="/" 
+            element={user ? <Homepage /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/login" 
+            element={user ? <Navigate to="/" /> : <Login />} />
+          <Route 
+            path="/signup" 
+            element={user ? <Navigate to="/" /> : <Signup />} />
           <Route
             path="/portfolio"
             element={user ? <Portfolio /> : <Navigate to="/login" />}
@@ -41,7 +48,10 @@ function App() {
             path="/stock/:symbol"
             element={user ? <StockDetails /> : <Navigate to="/login" />}
           />
-          <Route path="*" element={<NotFound />} />
+          <Route 
+            path="*" 
+            element={user ? <NotFound /> : <Navigate to ="/login" />} />
+          <Route path="/test/:symbol" element={<StockDetails />} />
         </Routes>
       </Router>
     </div>

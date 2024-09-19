@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import supabase from './SupabaseClient';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -23,7 +24,10 @@ const SignUp = () => {
       password,
     });
     if (error) setError(error.message);
-    else alert('Sign up successful! Please verify your email');
+    else{
+        alert('Sign up successful! Please verify your email');
+        navigate('/');
+    };
   };
 
   return (
