@@ -13,27 +13,25 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Supabase Authentication Listener
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event); // Check the event
+      console.log('Session:', session);   // Check the session object
       setUser(session?.user ?? null);
     });
-
-    // Cleanup subscription on unmount
+  
     return () => {
       if (authListener && typeof authListener.unsubscribe === 'function') {
         authListener.unsubscribe();
       }
     };
   }, []);
+  
 
   return (
     <div className="App">
       <Router>
         <Routes>
-          <Route 
-            path="/" 
-            element={user ? <Homepage /> : <Navigate to="/login" />} 
-          />
+          <Route path="/" element={<Homepage />} />
           <Route 
             path="/login" 
             element={user ? <Navigate to="/" /> : <Login />} />
@@ -42,15 +40,15 @@ function App() {
             element={user ? <Navigate to="/" /> : <Signup />} />
           <Route
             path="/portfolio"
-            element={user ? <Portfolio /> : <Navigate to="/login" />}
+            element={user ? <Portfolio /> : <Navigate to="/" />}
           />
           <Route
             path="/stock/:symbol"
-            element={user ? <StockDetails /> : <Navigate to="/login" />}
+            element={user ? <StockDetails /> : <Navigate to="/" />}
           />
           <Route 
             path="*" 
-            element={user ? <NotFound /> : <Navigate to ="/login" />} />
+            element={user ? <NotFound /> : <Navigate to ="/" />} />
           <Route path="/test/:symbol" element={<StockDetails />} />
         </Routes>
       </Router>

@@ -51,24 +51,24 @@ const StockDetails = () => {
   
     try {
       const response = await axios.get(url);
-      console.log('API Response:', response.data); // Log API response
-  
       const data = response.data;
   
-      if (data['Error Message']) {
-        setError('Unable to fetch stock data.');
+      // Check for rate limit or error message in the response
+      if (data['Error Message'] || data['Information']) {
+        setError('Unable to fetch stock data. ' + (data['Error Message'] || data['Information']));
         setLoading(false);
-      } else {
-        setStockData(data);
-        prepareChartData(data['Time Series (5min)']);
-        setLoading(false); // Set loading to false after successful fetch
+        return; // Exit early if there's an error
       }
+  
+      setStockData(data);
+      prepareChartData(data['Time Series (5min)']);
+      setLoading(false); // Set loading to false after successful fetch
     } catch (err) {
-      console.error('Error fetching stock data:', err);
-      setError('Error fetching stock data');
+      setError('Error fetching stock data: ' + err.message);
       setLoading(false); // Ensure loading is set to false if there's an error
     }
   }, [symbol]);
+  
   
 
   const prepareChartData = (timeSeries) => {
