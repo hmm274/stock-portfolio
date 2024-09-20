@@ -27,7 +27,7 @@ const Homepage = () => {
                     
                     // Check if we got the name data and set it
                     if (nameData && nameData.length > 0 && nameData[0]?.name) {
-                        setName(nameData[0].name);
+                        setName(nameData[0].name.charAt(0).toUpperCase() + nameData[0].name.slice(1));
                         console.log("Name set to:", nameData[0].name); // Ensure name is set correctly
                     }
                 }

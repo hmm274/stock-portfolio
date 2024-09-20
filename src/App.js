@@ -7,6 +7,7 @@ import NotFound from './components/NotFound';
 import supabase from './components/SupabaseClient';
 import Signup from './components/Signup';
 import Login from './components/Login';
+import Search from './components/Search';
 import './App.css';
 
 function App() {
@@ -42,6 +43,9 @@ function App() {
             path="/portfolio"
             element={user ? <Portfolio /> : <Navigate to="/" />}
           />
+          <Route
+            path="/search"
+            element={user ? <Search /> : <Navigate to="/" />} />
           <Route
             path="/stock/:symbol"
             element={user ? <StockDetails /> : <Navigate to="/" />}

@@ -32,6 +32,7 @@ const StockDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chartData, setChartData] = useState({});
+  const [timeFrame, setTimeFrame] = useState('5min'); // State to hold selected time frame
   
   // Function to check if the market is open
   const isMarketOpen = () => {
@@ -47,33 +48,47 @@ const StockDetails = () => {
   };
 
   const fetchStockData = useCallback(async () => {
-    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=5min&apikey=${API_KEY}`;
-  
+    // Adjust the API function based on the selected time frame
+    const functionType =
+      timeFrame === '1day'
+        ? 'TIME_SERIES_DAILY'
+        : timeFrame === '1week'
+        ? 'TIME_SERIES_WEEKLY'
+        : 'TIME_SERIES_INTRADAY';
+
+    const interval = timeFrame === '5min' ? '&interval=5min' : '';
+
+    const url = `https://www.alphavantage.co/query?function=${functionType}&symbol=${symbol}${interval}&apikey=${API_KEY}`;
+
     try {
       const response = await axios.get(url);
       const data = response.data;
-  
+
       // Check for rate limit or error message in the response
       if (data['Error Message'] || data['Information']) {
-        setError('Unable to fetch stock data. ' + (data['Error Message'] || data['Information']));
+        setError(
+          'Unable to fetch stock data. ' + (data['Error Message'] || data['Information'])
+        );
         setLoading(false);
         return; // Exit early if there's an error
       }
-  
+
       setStockData(data);
-      prepareChartData(data['Time Series (5min)']);
+
+      const timeSeriesKey =
+        timeFrame === '1day' ? 'Time Series (Daily)' : timeFrame === '1week' ? 'Weekly Time Series' : 'Time Series (5min)';
+
+      prepareChartData(data[timeSeriesKey]);
       setLoading(false); // Set loading to false after successful fetch
     } catch (err) {
       setError('Error fetching stock data: ' + err.message);
       setLoading(false); // Ensure loading is set to false if there's an error
     }
-  }, [symbol]);
-  
-  
+  }, [symbol, timeFrame]);
 
   const prepareChartData = (timeSeries) => {
     const dates = Object.keys(timeSeries).slice(0, 30).reverse();
-    const prices = dates.map(date => timeSeries[date]['4. close']);
+    const prices = dates.map((date) => timeSeries[date]['4. close']);
 
     setChartData({
       labels: dates,
@@ -103,7 +118,7 @@ const StockDetails = () => {
 
     // Clean up the interval when the component is unmounted
     return () => clearInterval(interval);
-  }, [symbol, fetchStockData]);
+  }, [symbol, timeFrame, fetchStockData]);
 
   // Show loading state
   if (loading) return <p>Loading stock data...</p>;
@@ -112,7 +127,7 @@ const StockDetails = () => {
   if (error) return <p>{error}</p>;
 
   // Destructure stock data for display
-  const timeSeries = stockData['Time Series (5min)'];
+  const timeSeries = stockData['Time Series (5min)'] || stockData['Time Series (Daily)'] || stockData['Weekly Time Series'];
   const lastDate = Object.keys(timeSeries)[0];
   const lastData = timeSeries[lastDate];
 
@@ -123,16 +138,41 @@ const StockDetails = () => {
   const volume = lastData['5. volume'];
 
   return (
-    <div>
+    <div className="StockDetails">
       <h1>Stock Details for {symbol.toUpperCase()}</h1>
-      <div className="stock-info">
-        <h2>Price Information</h2>
-        <p><strong>Current Price:</strong> ${currentPrice}</p>
-        <p><strong>Open Price:</strong> ${openPrice}</p>
-        <p><strong>Day's High:</strong> ${highPrice}</p>
-        <p><strong>Day's Low:</strong> ${lowPrice}</p>
-        <p><strong>Volume:</strong> {volume}</p>
+      <div className="item-1">
+        <div>
+          {/* Dropdown or buttons for selecting time frame */}
+          <label htmlFor="timeFrame">Select Time Frame: </label>
+          <select
+            id="timeFrame"
+            value={timeFrame}
+            onChange={(e) => setTimeFrame(e.target.value)}
+          >
+            <option value="5min">5 Minutes</option>
+            <option value="1day">1 Day</option>
+            <option value="1week">1 Week</option>
+          </select>
+        </div>
 
+        <div className="stock-info">
+          <h2>Price Information</h2>
+          <p>
+            <strong>Current Price:</strong> ${currentPrice}
+          </p>
+          <p>
+            <strong>Open Price:</strong> ${openPrice}
+          </p>
+          <p>
+            <strong>Day's High:</strong> ${highPrice}
+          </p>
+          <p>
+            <strong>Day's Low:</strong> ${lowPrice}
+          </p>
+          <p>
+            <strong>Volume:</strong> {volume}
+          </p>
+        </div>
         <h2>Historical Data</h2>
         <div style={{ maxWidth: '700px', margin: 'auto' }}>
           <Line data={chartData} />
