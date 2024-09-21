@@ -21,15 +21,17 @@ const Search = () => {
     // Function to rotate API key
     const rotateApiKeys = useCallback(() => {
         const nextIndex = (apiIndex + 1) % API_KEYS.length;
-        setApiIndex(nextIndex);
-        setRetry(true); // Trigger retry after rotating the key
+        setTimeout(()=>{
+            setApiIndex(nextIndex);
+            setRetry(true); // Trigger retry after rotating the key
 
-        // Update the key usage counter
-        setKeyUsageCount((prevCount) => prevCount + 1);
-        // Check if all keys have been exhausted
-        if (keyUsageCount + 1 >= API_KEYS.length) {
-            setKeysExhausted(true);
-        }
+            // Update the key usage counter
+            setKeyUsageCount((prevCount) => prevCount + 1);
+            // Check if all keys have been exhausted
+            if (keyUsageCount + 1 >= API_KEYS.length) {
+                setKeysExhausted(true);
+            }
+        },3000);
     },[apiIndex,keyUsageCount]);
 
     // Function to fetch ticker symbols

@@ -33,6 +33,7 @@ const StockDetails = () => {
   const [error, setError] = useState(null);
   const [chartData, setChartData] = useState({});
   const [timeFrame, setTimeFrame] = useState('5min'); // State to hold selected time frame
+  const [newsData, setNewsData] = useState([]);
   
   // Function to check if the market is open
   const isMarketOpen = () => {
@@ -86,6 +87,38 @@ const StockDetails = () => {
     }
   }, [symbol, timeFrame]);
 
+  const fetchNewsData = useCallback(async()=>{
+    const newsUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${API_KEY}`;
+
+    try{
+      const response = await axios.get(newsUrl);
+      const data = response.data;
+
+      if(data && data.feed){
+        const formattedNews = data.feed.slice(0, 5).map(article => ({
+          title: article.title,
+          summary: article.summary,
+          url: article.url,
+          date: formatArticleDate(article.time_published) // Format the date
+        }));
+        setNewsData(formattedNews);
+      } else{
+        setNewsData([]);
+      }
+
+    } catch(error){
+      setNewsData("Error fetching data: "+error.message);
+    }
+  }, [symbol]);
+  const formatArticleDate = (rawDate) => {
+    const year = rawDate.slice(0, 4);
+    const month = rawDate.slice(4, 6);
+    const day = rawDate.slice(6, 8);
+    const time = rawDate.slice(9, 13);
+    
+    return `${year}-${month}-${day} ${time.slice(0, 2)}:${time.slice(2)}`; // Format as "YYYY-MM-DD HH:MM"
+  };
+
   const prepareChartData = (timeSeries) => {
     const dates = Object.keys(timeSeries).slice(0, 30).reverse();
     const prices = dates.map((date) => timeSeries[date]['4. close']);
@@ -109,6 +142,8 @@ const StockDetails = () => {
     // Fetch initial stock data
     fetchStockData();
 
+    fetchNewsData();
+
     // Set an interval to fetch stock data every 30 seconds when the market is open
     const interval = setInterval(() => {
       if (isMarketOpen()) {
@@ -118,7 +153,7 @@ const StockDetails = () => {
 
     // Clean up the interval when the component is unmounted
     return () => clearInterval(interval);
-  }, [symbol, timeFrame, fetchStockData]);
+  }, [symbol, timeFrame, fetchStockData, fetchNewsData]);
 
   // Show loading state
   if (loading) return <p>Loading stock data...</p>;
@@ -140,9 +175,8 @@ const StockDetails = () => {
   return (
     <div className="StockDetails">
       <h1>Stock Details for {symbol.toUpperCase()}</h1>
-      <div className="item-1">
+      <div className="item">
         <div>
-          {/* Dropdown or buttons for selecting time frame */}
           <label htmlFor="timeFrame">Select Time Frame: </label>
           <select
             id="timeFrame"
@@ -154,7 +188,7 @@ const StockDetails = () => {
             <option value="1week">1 Week</option>
           </select>
         </div>
-
+        <hr />
         <div className="stock-info">
           <h2>Price Information</h2>
           <p>
@@ -173,9 +207,30 @@ const StockDetails = () => {
             <strong>Volume:</strong> {volume}
           </p>
         </div>
-        <h2>Historical Data</h2>
-        <div style={{ maxWidth: '700px', margin: 'auto' }}>
-          <Line data={chartData} />
+        <hr />
+        <div>
+          <h2>Historical Data</h2>
+          <Line style={{ minWidth: '500px',height:'auto',minHeight:'350px',maxWidth:'100%', margin: 'auto' }} data={chartData} />
+        </div>
+        <hr />
+        <div className="news-section">
+          <h2>Relevant News</h2>
+          {newsData.length > 0 ? (
+            <ul>
+              {newsData.map((article, index) => (
+                <li key={index}>
+                  <a href={article.url} target="_blank" rel="noopener noreferrer">
+                    {article.title}
+                  </a>
+                  <p>{article.summary}</p>
+                  <p><strong>Published on:</strong> {article.date}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No news available for {symbol}.</p>
+          )
+          }
         </div>
       </div>
     </div>

@@ -48,12 +48,14 @@ const Homepage = () => {
             <p>Manage your investments and track stock prices in real-time.</p>
 
             <div className="homepage-links">
-                <button onClick={() => navigate("/portfolio")} className="homepage-button">View Portfolio</button>
                 {currentUser ? (
-                    <button onClick={handleLogout} className="homepage-button">Log Out</button>
+                    <div>
+                        <button onClick={() => navigate("/portfolio")} className="homepage-button">View Portfolio</button><br />
+                        <button onClick={handleLogout} className="homepage-button">Log Out</button>
+                    </div>
                 ) : (
                     <div>
-                        <button onClick={() => navigate("/signup")} className="homepage-button">Sign Up</button>
+                        <button onClick={() => navigate("/signup")} className="homepage-button">Sign Up</button><br />
                         <button onClick={() => navigate("/login")} className="homepage-button">Log In</button>
                     </div>
                 )}
