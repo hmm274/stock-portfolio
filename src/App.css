@@ -136,3 +136,48 @@ hr {
   margin: 5px 0;            
   width: 100%;            
 }
+
+button:disabled{
+  background-color:#727272;
+}
+button:disabled:hover{
+  cursor:auto;
+}
+
+.remove{
+  background-color:#b20000;
+}
+
+.add{
+  background-color:#00b200;
+}
+.add:hover{
+  background-color:#006400;
+}
+.remove:hover{
+  background-color:#640000;
+}
+.add, .remove{
+  position:absolute;
+  top:8%;
+  right:22%;
+  font-size:11pt;
+  padding:7px;
+}
+li{
+  list-style:none;
+}
+
+.ticker-container{
+  display:inline-block;
+  margin:10px;
+  border:solid 1px #FFFFFF;
+  border-radius:5px;
+  padding:10px;
+  background-color:#ffffff10;
+  transition:0.2s;
+}
+
+.ticker-container:hover{
+  background-color:#ffffff30;
+}

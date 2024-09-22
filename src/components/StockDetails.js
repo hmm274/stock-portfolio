@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import supabase from './SupabaseClient';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import {
@@ -11,18 +12,10 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler
 } from 'chart.js';
 
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const API_KEY = process.env.REACT_APP_API_KEY;
 
@@ -32,105 +25,141 @@ const StockDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chartData, setChartData] = useState({});
-  const [timeFrame, setTimeFrame] = useState('5min'); // State to hold selected time frame
+  const [timeFrame, setTimeFrame] = useState('1day'); // State to hold selected time frame
   const [newsData, setNewsData] = useState([]);
-  
-  // Function to check if the market is open
-  const isMarketOpen = () => {
-    const now = new Date();
-    const day = now.getDay(); // 0 (Sunday) to 6 (Saturday)
-    const hour = now.getHours(); // 0 to 23
+  const [priceDifference, setPriceDifference] = useState(null);
+  const [stockAdded, setStockAdded] = useState(false);
+  const [user, setUser] = useState(null);
+  const [externalStock, setExternalStock] = useState(false);
 
-    // Market is open from Monday to Friday, 9:30 AM to 4:00 PM (Eastern Time)
-    const isWeekday = day >= 1 && day <= 5;
-    const isOpenHour = hour >= 9 && hour < 16;
+  // Check if the stock is in the user's portfolio
+  const checkIfStockIsAdded = useCallback(async (userId) => {
+    const { data, error } = await supabase
+      .from('portfolio')
+      .select('stock_symbol')
+      .eq('user_id', userId)
+      .eq('stock_symbol', symbol);
 
-    return isWeekday && isOpenHour;
+    if (error) {
+      console.error('Error checking portfolio:', error.message);
+    } else {
+      if (data.length > 0) {
+        setStockAdded(true); // Stock already in portfolio
+      }
+    }
+  },[symbol]);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUser(session.user);
+        checkIfStockIsAdded(session.user.id);
+      }
+    };
+    getUser();
+  }, [symbol, checkIfStockIsAdded]);
+
+  const addStock = async () => {
+    if (user) {
+      const { data, error } = await supabase
+        .from('portfolio')
+        .insert([{ user_id: user.id, stock_symbol: symbol }]);
+
+      if (error) {
+        console.error('Error adding stock:', error.message);
+      } else {
+        console.log('Stock added:', data);
+        setStockAdded(true);
+      }
+    }
+  };
+
+  const removeStock = async () => {
+    if (user) {
+      const { data, error } = await supabase
+        .from('portfolio')
+        .delete()
+        .match({ user_id: user.id, stock_symbol: symbol });
+
+      if (error) {
+        console.error('Error removing stock:', error.message);
+      } else {
+        console.log('Stock removed:', data);
+        setStockAdded(false);
+      }
+    }
   };
 
   const fetchStockData = useCallback(async () => {
-    // Adjust the API function based on the selected time frame
-    const functionType =
-      timeFrame === '1day'
-        ? 'TIME_SERIES_DAILY'
-        : timeFrame === '1week'
-        ? 'TIME_SERIES_WEEKLY'
-        : 'TIME_SERIES_INTRADAY';
-
+    const functionType = timeFrame === '1day' ? 'TIME_SERIES_DAILY' : timeFrame === '1week' ? 'TIME_SERIES_WEEKLY' : 'TIME_SERIES_INTRADAY';
     const interval = timeFrame === '5min' ? '&interval=5min' : '';
-
     const url = `https://www.alphavantage.co/query?function=${functionType}&symbol=${symbol}${interval}&apikey=${API_KEY}`;
 
     try {
       const response = await axios.get(url);
       const data = response.data;
 
-      // Check for rate limit or error message in the response
       if (data['Error Message'] || data['Information']) {
-        setError(
-          'Unable to fetch stock data. ' + (data['Error Message'] || data['Information'])
-        );
+        setError('Unable to fetch stock data. ' + (data['Error Message'] || data['Information']));
         setLoading(false);
-        return; // Exit early if there's an error
+        return;
       }
 
       setStockData(data);
-
-      const timeSeriesKey =
-        timeFrame === '1day' ? 'Time Series (Daily)' : timeFrame === '1week' ? 'Weekly Time Series' : 'Time Series (5min)';
-
+      const timeSeriesKey = timeFrame === '1day' ? 'Time Series (Daily)' : timeFrame === '1week' ? 'Weekly Time Series' : 'Time Series (5min)';
       prepareChartData(data[timeSeriesKey]);
-      setLoading(false); // Set loading to false after successful fetch
+      setLoading(false);
     } catch (err) {
       setError('Error fetching stock data: ' + err.message);
-      setLoading(false); // Ensure loading is set to false if there's an error
+      setLoading(false);
     }
   }, [symbol, timeFrame]);
 
-  const fetchNewsData = useCallback(async()=>{
+  const fetchNewsData = useCallback(async () => {
     const newsUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${API_KEY}`;
 
-    try{
+    try {
       const response = await axios.get(newsUrl);
       const data = response.data;
 
-      if(data && data.feed){
-        const formattedNews = data.feed.slice(0, 5).map(article => ({
+      if (data && data.feed) {
+        const formattedNews = data.feed.slice(0, 5).map((article) => ({
           title: article.title,
           summary: article.summary,
           url: article.url,
-          date: formatArticleDate(article.time_published) // Format the date
+          date: formatArticleDate(article.time_published),
         }));
         setNewsData(formattedNews);
-      } else{
+      } else {
         setNewsData([]);
       }
-
-    } catch(error){
-      setNewsData("Error fetching data: "+error.message);
+    } catch (error) {
+      setNewsData('Error fetching data: ' + error.message);
     }
   }, [symbol]);
+
   const formatArticleDate = (rawDate) => {
     const year = rawDate.slice(0, 4);
     const month = rawDate.slice(4, 6);
     const day = rawDate.slice(6, 8);
     const time = rawDate.slice(9, 13);
-    
-    return `${year}-${month}-${day} ${time.slice(0, 2)}:${time.slice(2)}`; // Format as "YYYY-MM-DD HH:MM"
+    return `${year}-${month}-${day} ${time.slice(0, 2)}:${time.slice(2)}`;
   };
 
   const prepareChartData = (timeSeries) => {
     const dates = Object.keys(timeSeries).slice(0, 30).reverse();
     const prices = dates.map((date) => timeSeries[date]['4. close']);
-
+    const difference = prices[prices.length - 1] - prices[0];
+    setPriceDifference(difference);
     setChartData({
       labels: dates,
       datasets: [
         {
           label: 'Closing Price (USD)',
           data: prices,
-          borderColor: 'rgba(75, 192, 192, 1)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: difference > 0 ? 'rgba(0,255,0,1)' : difference < 0 ? 'rgba(255,0,0,1)' : 'rgba(0,200,255,1)',
+          backgroundColor: difference > 0 ? 'rgba(0,255,0,0.2)' : difference < 0 ? 'rgba(255,0,0,0.2)' : 'rgba(0,200,255,0.2)',
           fill: true,
           tension: 0.1,
         },
@@ -139,33 +168,38 @@ const StockDetails = () => {
   };
 
   useEffect(() => {
-    // Fetch initial stock data
-    fetchStockData();
+    if (symbol.includes('.')) {
+      setExternalStock(false);
+    } else {
+      setExternalStock(true);
+      setTimeFrame('5min');
+    } 
 
+    fetchStockData();
     fetchNewsData();
 
-    // Set an interval to fetch stock data every 30 seconds when the market is open
     const interval = setInterval(() => {
       if (isMarketOpen()) {
         fetchStockData();
       }
-    }, 30000); // 30000ms = 30 seconds
+    }, 30000);
 
-    // Clean up the interval when the component is unmounted
     return () => clearInterval(interval);
   }, [symbol, timeFrame, fetchStockData, fetchNewsData]);
 
-  // Show loading state
-  if (loading) return <p>Loading stock data...</p>;
+  const isMarketOpen = () => {
+    const now = new Date();
+    const day = now.getDay();
+    const hour = now.getHours();
+    return day >= 1 && day <= 5 && hour >= 9 && hour < 16;
+  };
 
-  // Handle error state
+  if (loading) return <p>Loading stock data...</p>;
   if (error) return <p>{error}</p>;
 
-  // Destructure stock data for display
   const timeSeries = stockData['Time Series (5min)'] || stockData['Time Series (Daily)'] || stockData['Weekly Time Series'];
   const lastDate = Object.keys(timeSeries)[0];
   const lastData = timeSeries[lastDate];
-
   const currentPrice = lastData['4. close'];
   const highPrice = lastData['2. high'];
   const lowPrice = lastData['3. low'];
@@ -175,17 +209,31 @@ const StockDetails = () => {
   return (
     <div className="StockDetails">
       <h1>Stock Details for {symbol.toUpperCase()}</h1>
-      <div className="item">
+      {stockAdded ? (
+        <button className="remove" onClick={removeStock}>
+          Remove
+        </button>
+      ) : (
+        <button className="add" onClick={addStock}>
+          Add
+        </button>
+      )}
+      {<div className="item">
         <div>
-          <label htmlFor="timeFrame">Select Time Frame: </label>
+          <label htmlFor="timeFrame">Select Time Interval: </label>
           <select
             id="timeFrame"
             value={timeFrame}
             onChange={(e) => setTimeFrame(e.target.value)}
           >
-            <option value="5min">5 Minutes</option>
-            <option value="1day">1 Day</option>
-            <option value="1week">1 Week</option>
+            {externalStock ?
+              (<><option value="5min">5 Minutes</option>
+              <option value="1day">1 Day</option>
+              <option value="1week">1 Week</option></>)
+              :
+              (<><option value="1day">1 Day</option>
+              <option value="1week">1 Week</option></>)
+            }
           </select>
         </div>
         <hr />
@@ -205,6 +253,9 @@ const StockDetails = () => {
           </p>
           <p>
             <strong>Volume:</strong> {volume}
+          </p>
+          <p>
+            <strong>Profit Margin:</strong> {priceDifference<0 ? `-$${(-priceDifference).toFixed(2)}` : (`$${priceDifference.toFixed(2)}`)}
           </p>
         </div>
         <hr />
@@ -232,7 +283,7 @@ const StockDetails = () => {
           )
           }
         </div>
-      </div>
+      </div>}
     </div>
   );
 };

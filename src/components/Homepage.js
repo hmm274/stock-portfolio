@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from './SupabaseClient';
 import getUserDetails from './getUserDetails';
+import GeneralNews from './GeneralNews';
 
 const Homepage = () => {
     const navigate = useNavigate();
@@ -68,6 +69,7 @@ const Homepage = () => {
                 <li>Track your investments</li>
                 <li>Easy-to-use interface</li>
             </ul>
+            <GeneralNews />
         </div>
     );
 };
