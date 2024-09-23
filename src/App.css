@@ -32,11 +32,16 @@ button:hover {
   cursor: pointer;
 }
 
+.signup{
+  margin: auto !important;
+}
+
 .login-box {
   border: solid 1px #FFFFFF;
   width: 40%;
   margin: 5% auto;
   padding: 20px;
+  border-radius:5px;
 }
 
 a {
@@ -180,4 +185,17 @@ li{
 
 .ticker-container:hover{
   background-color:#ffffff30;
+}
+
+.header{
+  position:fixed;
+  top:7px;
+  width:100%;
+}
+.link-1{
+  float:left;
+}
+.link-2{
+  float:right;
+  margin-right:3%;
 }

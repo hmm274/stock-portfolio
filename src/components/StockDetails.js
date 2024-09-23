@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import supabase from './SupabaseClient';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
@@ -25,12 +25,13 @@ const StockDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chartData, setChartData] = useState({});
-  const [timeFrame, setTimeFrame] = useState('1day'); // State to hold selected time frame
+  const initialTimeframe = symbol.includes('.') ? '1day' : '5min';
+  const [timeFrame, setTimeFrame] = useState(initialTimeframe); // State to hold selected time frame
   const [newsData, setNewsData] = useState([]);
   const [priceDifference, setPriceDifference] = useState(null);
   const [stockAdded, setStockAdded] = useState(false);
   const [user, setUser] = useState(null);
-  const [externalStock, setExternalStock] = useState(false);
+  const externalStock = symbol.includes('.') ? false : true;
 
   // Check if the stock is in the user's portfolio
   const checkIfStockIsAdded = useCallback(async (userId) => {
@@ -168,13 +169,6 @@ const StockDetails = () => {
   };
 
   useEffect(() => {
-    if (symbol.includes('.')) {
-      setExternalStock(false);
-    } else {
-      setExternalStock(true);
-      setTimeFrame('5min');
-    } 
-
     fetchStockData();
     fetchNewsData();
 
@@ -207,83 +201,89 @@ const StockDetails = () => {
   const volume = lastData['5. volume'];
 
   return (
-    <div className="StockDetails">
-      <h1>Stock Details for {symbol.toUpperCase()}</h1>
-      {stockAdded ? (
-        <button className="remove" onClick={removeStock}>
-          Remove
-        </button>
-      ) : (
-        <button className="add" onClick={addStock}>
-          Add
-        </button>
-      )}
-      {<div className="item">
-        <div>
-          <label htmlFor="timeFrame">Select Time Interval: </label>
-          <select
-            id="timeFrame"
-            value={timeFrame}
-            onChange={(e) => setTimeFrame(e.target.value)}
-          >
-            {externalStock ?
-              (<><option value="5min">5 Minutes</option>
-              <option value="1day">1 Day</option>
-              <option value="1week">1 Week</option></>)
-              :
-              (<><option value="1day">1 Day</option>
-              <option value="1week">1 Week</option></>)
+    <div>
+      <div className="header">
+        <Link to="/search" className="link-1">Back to Search</Link>
+        <Link to="/portfolio" className="link-2">To your Portfolio</Link>
+      </div>
+      <div className="StockDetails">
+        <h1>Stock Details for {symbol.toUpperCase()}</h1>
+        {stockAdded ? (
+          <button className="remove" onClick={removeStock}>
+            Remove
+          </button>
+        ) : (
+          <button className="add" onClick={addStock}>
+            Add
+          </button>
+        )}
+        {<div className="item">
+          <div>
+            <label htmlFor="timeFrame">Select Time Interval: </label>
+            <select
+              id="timeFrame"
+              value={timeFrame}
+              onChange={(e) => setTimeFrame(e.target.value)}
+            >
+              {externalStock ?
+                (<><option value="5min">5 Minutes</option>
+                <option value="1day">1 Day</option>
+                <option value="1week">1 Week</option></>)
+                :
+                (<><option value="1day">1 Day</option>
+                <option value="1week">1 Week</option></>)
+              }
+            </select>
+          </div>
+          <hr />
+          <div className="stock-info">
+            <h2>Price Information</h2>
+            <p>
+              <strong>Current Price:</strong> ${currentPrice}
+            </p>
+            <p>
+              <strong>Open Price:</strong> ${openPrice}
+            </p>
+            <p>
+              <strong>Day's High:</strong> ${highPrice}
+            </p>
+            <p>
+              <strong>Day's Low:</strong> ${lowPrice}
+            </p>
+            <p>
+              <strong>Volume:</strong> {volume}
+            </p>
+            <p>
+              <strong>Profit Margin:</strong> {priceDifference<0 ? `-$${(-priceDifference).toFixed(2)}` : (`$${priceDifference.toFixed(2)}`)}
+            </p>
+          </div>
+          <hr />
+          <div>
+            <h2>Historical Data</h2>
+            <Line style={{ minWidth: '500px',height:'auto',minHeight:'350px',maxWidth:'100%', margin: 'auto' }} data={chartData} />
+          </div>
+          <hr />
+          <div className="news-section">
+            <h2>Relevant News</h2>
+            {newsData.length > 0 ? (
+              <ul>
+                {newsData.map((article, index) => (
+                  <li key={index}>
+                    <a href={article.url} target="_blank" rel="noopener noreferrer">
+                      {article.title}
+                    </a>
+                    <p>{article.summary}</p>
+                    <p><strong>Published on:</strong> {article.date}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No news available for {symbol}.</p>
+            )
             }
-          </select>
-        </div>
-        <hr />
-        <div className="stock-info">
-          <h2>Price Information</h2>
-          <p>
-            <strong>Current Price:</strong> ${currentPrice}
-          </p>
-          <p>
-            <strong>Open Price:</strong> ${openPrice}
-          </p>
-          <p>
-            <strong>Day's High:</strong> ${highPrice}
-          </p>
-          <p>
-            <strong>Day's Low:</strong> ${lowPrice}
-          </p>
-          <p>
-            <strong>Volume:</strong> {volume}
-          </p>
-          <p>
-            <strong>Profit Margin:</strong> {priceDifference<0 ? `-$${(-priceDifference).toFixed(2)}` : (`$${priceDifference.toFixed(2)}`)}
-          </p>
-        </div>
-        <hr />
-        <div>
-          <h2>Historical Data</h2>
-          <Line style={{ minWidth: '500px',height:'auto',minHeight:'350px',maxWidth:'100%', margin: 'auto' }} data={chartData} />
-        </div>
-        <hr />
-        <div className="news-section">
-          <h2>Relevant News</h2>
-          {newsData.length > 0 ? (
-            <ul>
-              {newsData.map((article, index) => (
-                <li key={index}>
-                  <a href={article.url} target="_blank" rel="noopener noreferrer">
-                    {article.title}
-                  </a>
-                  <p>{article.summary}</p>
-                  <p><strong>Published on:</strong> {article.date}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No news available for {symbol}.</p>
-          )
-          }
-        </div>
-      </div>}
+          </div>
+        </div>}
+      </div>
     </div>
   );
 };

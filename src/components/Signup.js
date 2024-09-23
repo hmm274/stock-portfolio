@@ -47,7 +47,7 @@ const SignUp = () => {
 
 
   return (
-    <div className="login-box">
+    <div className="login-box signup">
         <form onSubmit={handleSignUp}>
         <h1>Welcome to your Stock Portfolio!</h1>
         <input
