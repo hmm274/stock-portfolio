@@ -8,6 +8,7 @@ import supabase from './components/SupabaseClient';
 import Signup from './components/Signup';
 import Login from './components/Login';
 import Search from './components/Search';
+import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
   return (
     <div className="App">
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route 
