@@ -45,7 +45,7 @@ const Homepage = () => {
 
     return (
         <div className="homepage">
-            <h1>Welcome to Your Stock Portfolio, {name}</h1>
+            <h1>Welcome to Your Stock Portfolio, {name}!</h1>
             <p>Manage your investments and track stock prices in real-time.</p>
 
             <div className="homepage-links">
