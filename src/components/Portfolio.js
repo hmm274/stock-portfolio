@@ -13,6 +13,7 @@ import {
   Filler
 } from 'chart.js';
 import axios from 'axios';
+import Profits from './Profits';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler);
@@ -195,6 +196,7 @@ const Portfolio = () => {
       )}
       <br />
       <Link to="/search">Find a ticker</Link>
+      <Profits />
     </div>
   );
 };
