@@ -61,14 +61,6 @@ const Homepage = () => {
                     </div>
                 )}
             </div>
-
-            <h2>Features</h2>
-            <ul>
-                <li>Real-time stock data</li>
-                <li>Historical price charts</li>
-                <li>Track your investments</li>
-                <li>Easy-to-use interface</li>
-            </ul>
             <GeneralNews />
         </div>
     );

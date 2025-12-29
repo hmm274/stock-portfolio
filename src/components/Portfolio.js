@@ -13,12 +13,11 @@ import {
   Filler
 } from 'chart.js';
 import axios from 'axios';
-import Profits from './Profits';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler);
 
-const API_KEY = process.env.ALPHAVANTAGE_KEY;
+const API_KEY = process.env.REACT_APP_ALPHAVANTAGE_KEY;
 
 const Portfolio = () => {
   const [tickers, setTickers] = useState([]);
@@ -67,52 +66,28 @@ const Portfolio = () => {
 
     const fetchStockData = async (symbol) => {
         try {
-            if(symbol.includes('.')){
-                const url=`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}`;
-                const response = await axios.get(url);
-                const timeSeries = response.data['Time Series (Daily)'];
-                if (timeSeries) {
-                    const dates = Object.keys(timeSeries).slice(0,7).reverse();
-                    const allDates = Object.keys(timeSeries).slice(0,30).reverse();
-                    const prices = dates.map((date)=>timeSeries[date]['4. close']);
-                    const allPrices = allDates.map((date)=>timeSeries[date]['4. close']);
-                    const priceDifference = allPrices[allPrices.length - 1] - allPrices[0];
-                    const currentPrice = allPrices[allPrices.length-1];
+          const url=`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}`;
+          const response = await axios.get(url);
+          const timeSeries = response.data['Time Series (Daily)'];
+          if (timeSeries) {
+              const dates = Object.keys(timeSeries).slice(0,7).reverse();
+              const allDates = Object.keys(timeSeries).slice(0,30).reverse();
+              const prices = dates.map((date)=>timeSeries[date]['4. close']);
+              const allPrices = allDates.map((date)=>timeSeries[date]['4. close']);
+              const priceDifference = allPrices[allPrices.length - 1] - allPrices[0];
+              const currentPrice = allPrices[allPrices.length-1];
 
-                    setChartsData(prevData => ({
-                    ...prevData,
-                    [symbol]:{
-                        dates,
-                        prices,
-                        priceDifference,
-                        currentPrice
-                    }
-                    })
-                    )
-                }
-            }else{
-                const url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=5min&apikey=${API_KEY}`;
-                const response = await axios.get(url);
-                const timeSeries = response.data['Time Series (5min)'];
-                if (timeSeries) {
-                    const dates = Object.keys(timeSeries).slice(0, 7).reverse(); // Last 7 intervals
-                    const allDates = Object.keys(timeSeries).slice(0,30).reverse();
-                    const prices = dates.map((date) => timeSeries[date]['4. close']);
-                    const allPrices = allDates.map((date)=> timeSeries[date]['4. close']);
-                    const priceDifference = allPrices[allPrices.length - 1] - allPrices[0];
-                    const currentPrice = allPrices[allPrices.length-1];
-            
-                    setChartsData(prevData => ({
-                    ...prevData,
-                    [symbol]: {
-                        dates,
-                        prices,
-                        priceDifference,
-                        currentPrice
-                    }
-                    }));
-                }
-            }
+              setChartsData(prevData => ({
+              ...prevData,
+              [symbol]:{
+                  dates,
+                  prices,
+                  priceDifference,
+                  currentPrice
+              }
+              })
+              )
+          }
         } catch (error) {
           console.error(`Error fetching stock data for ${symbol}:`, error);
         }
@@ -196,7 +171,6 @@ const Portfolio = () => {
       )}
       <br />
       <Link to="/search">Find a ticker</Link>
-      <Profits />
     </div>
   );
 };

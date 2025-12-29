@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_KEY = process.env.ALPHAVANTAGE_KEY;
+const API_KEY = process.env.REACT_APP_ALPHAVANTAGE_KEY;
 
-// Move fetchGeneralNews outside the component
+const formatArticleDate = (rawDate) => {
+  const year = rawDate.slice(0, 4);
+  const month = rawDate.slice(4, 6);
+  const day = rawDate.slice(6, 8);
+  const time = rawDate.slice(9, 13);
+  return `${year}-${month}-${day} ${time.slice(0, 2)}:${time.slice(2)}`;
+};
+
 const fetchGeneralNews = async () => {
   const newsUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&apikey=${API_KEY}`;
 
@@ -26,42 +33,34 @@ const fetchGeneralNews = async () => {
   }
 };
 
-const formatArticleDate = (rawDate) => {
-  const year = rawDate.slice(0, 4);
-  const month = rawDate.slice(4, 6);
-  const day = rawDate.slice(6, 8);
-  const time = rawDate.slice(9, 13);
-  
-  return `${year}-${month}-${day} ${time.slice(0, 2)}:${time.slice(2)}`; // Format as "YYYY-MM-DD HH:MM"
-};
-
 const GeneralNews = () => {
   const [newsData, setNewsData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const loadNews = async () => {
-      try {
-        const news = await fetchGeneralNews();
-        setNewsData(news);
-        setLoading(false);
-      } catch (error) {
-        setError(error.message);
-        setLoading(false);
-      }
-    };
-
-    loadNews();
-  }, []); // No need to include fetchGeneralNews in the dependency array now
-
-  if (loading) return <p>Loading news...</p>;
-  if (error) return <p>{error}</p>;
+  const loadNews = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const news = await fetchGeneralNews();
+      setNewsData(news);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="news-section">
       <h2>General Stock Market News</h2>
-      {newsData.length > 0 ? (
+      <button onClick={loadNews} disabled={loading}>
+        {loading ? "Loading..." : "Load News"}
+      </button>
+
+      {error && <p>{error}</p>}
+
+      {newsData.length > 0 && (
         <ul>
           {newsData.map((article, index) => (
             <li key={index}>
@@ -73,9 +72,9 @@ const GeneralNews = () => {
             </li>
           ))}
         </ul>
-      ) : (
-        <p>No news available at this time.</p>
       )}
+
+      {newsData.length === 0 && !loading && !error && <p>No news loaded yet.</p>}
     </div>
   );
 };
