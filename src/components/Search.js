@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const API_KEY = process.env.REACT_APP_API_KEY;
+const API_KEY = process.env.ALPHAVANTAGE_KEY;
 
 const Search = () => {
     const [symbol, setSymbol] = useState("");

@@ -18,7 +18,7 @@ import Profits from './Profits';
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler);
 
-const API_KEY = process.env.REACT_APP_API_KEY;
+const API_KEY = process.env.ALPHAVANTAGE_KEY;
 
 const Portfolio = () => {
   const [tickers, setTickers] = useState([]);

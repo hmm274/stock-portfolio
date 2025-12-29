@@ -17,7 +17,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-const API_KEY = process.env.REACT_APP_API_KEY;
+const API_KEY = process.env.ALPHAVANTAGE_KEY;
 
 const StockDetails = () => {
   const { symbol } = useParams();
