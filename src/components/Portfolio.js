@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import supabase from './SupabaseClient'; // Import your Supabase client
 import { Link } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
@@ -20,13 +20,18 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 const API_KEY = process.env.REACT_APP_ALPHAVANTAGE_KEY;
 
 const Portfolio = () => {
+  const hasFetchedRef = useRef(false);
   const [tickers, setTickers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chartsData, setChartsData] = useState({});
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   // Fetch the portfolio tickers when the component mounts
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     const fetchPortfolio = async () => {
       try {
         const { data: { session }, error: authError } = await supabase.auth.getSession();
@@ -43,7 +48,6 @@ const Portfolio = () => {
           return;
         }
 
-        // Fetch the portfolio for the authenticated user
         const { data, error } = await supabase
           .from('portfolio')
           .select('stock_symbol')
@@ -52,47 +56,46 @@ const Portfolio = () => {
         if (error) throw error;
 
         setTickers(data);
+
+        const results = {};
+
+        for (const { stock_symbol } of data) {
+          try {
+            const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stock_symbol}&apikey=${API_KEY}`;
+            const response = await axios.get(url);
+            const timeSeries = response.data['Time Series (Daily)'];
+
+            if (timeSeries) {
+              const dates = Object.keys(timeSeries).slice(0, 7).reverse();
+              const allDates = Object.keys(timeSeries).slice(0, 30).reverse();
+              const prices = dates.map(date => timeSeries[date]['4. close']);
+              const allPrices = allDates.map(date => timeSeries[date]['4. close']);
+
+              results[stock_symbol] = {
+                dates,
+                prices,
+                priceDifference: allPrices[allPrices.length - 1] - allPrices[0],
+                currentPrice: allPrices[allPrices.length - 1]
+              };
+            }
+
+            // ⏱️ RATE LIMIT SAFETY
+            await sleep(1200);
+
+          } catch (err) {
+            console.error(`Error fetching ${stock_symbol}`, err);
+          }
+        }
+
+        // ✅ SET ALL CHARTS AT ONCE
+        setChartsData(results);
         setLoading(false);
 
-        // Fetch stock data for each ticker
-        data.forEach(({ stock_symbol }) => {
-          fetchStockData(stock_symbol);
-        });
       } catch (error) {
         setError('Error fetching portfolio: ' + error.message);
         setLoading(false);
       }
     };
-
-    const fetchStockData = async (symbol) => {
-        try {
-          const url=`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}`;
-          const response = await axios.get(url);
-          const timeSeries = response.data['Time Series (Daily)'];
-          if (timeSeries) {
-              const dates = Object.keys(timeSeries).slice(0,7).reverse();
-              const allDates = Object.keys(timeSeries).slice(0,30).reverse();
-              const prices = dates.map((date)=>timeSeries[date]['4. close']);
-              const allPrices = allDates.map((date)=>timeSeries[date]['4. close']);
-              const priceDifference = allPrices[allPrices.length - 1] - allPrices[0];
-              const currentPrice = allPrices[allPrices.length-1];
-
-              setChartsData(prevData => ({
-              ...prevData,
-              [symbol]:{
-                  dates,
-                  prices,
-                  priceDifference,
-                  currentPrice
-              }
-              })
-              )
-          }
-        } catch (error) {
-          console.error(`Error fetching stock data for ${symbol}:`, error);
-        }
-      };
-      
 
     fetchPortfolio();
   }, []);
