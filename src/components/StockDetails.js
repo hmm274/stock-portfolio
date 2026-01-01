@@ -57,7 +57,7 @@ const StockDetails = () => {
   // Add / Remove stock
   const addStock = async () => {
     if (!user) return;
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('portfolio')
       .insert([{ user_id: user.id, stock_symbol: symbol }]);
     if (!error) setStockAdded(true);
@@ -65,7 +65,7 @@ const StockDetails = () => {
 
   const removeStock = async () => {
     if (!user) return;
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('portfolio')
       .delete()
       .match({ user_id: user.id, stock_symbol: symbol });

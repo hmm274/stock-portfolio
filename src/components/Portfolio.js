@@ -25,6 +25,8 @@ const Portfolio = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chartsData, setChartsData] = useState({});
+  const [recLoading, setRecLoading] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   // Fetch the portfolio tickers when the component mounts
@@ -106,6 +108,29 @@ const Portfolio = () => {
   // Handle error state
   if (error) return <p>{error}</p>;
 
+  const sendSymbolsToBackend = async () => {
+    try {
+      setRecLoading(true);
+
+      const symbols = tickers.map(t => t.stock_symbol.toUpperCase());
+
+      const response = await fetch("http://localhost:8000/recommend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(symbols)
+      });
+
+      const data = await response.json();
+      setRecommendations(data.recommendations || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRecLoading(false);
+    }
+  };
+
   return (
     <div className="Portfolio">
       <h1>Your Portfolio</h1>
@@ -173,7 +198,35 @@ const Portfolio = () => {
         <p>You have no tickers added yet.</p>
       )}
       <br />
-      <Link to="/search">Find a ticker</Link>
+      <Link to="/search">Find a ticker</Link> <br />
+      <button className="ml-button" onClick={sendSymbolsToBackend}>
+        Generate ML Recommendations
+      </button>
+      {recLoading && <p>Running ML model…</p>}
+      {recommendations.length > 0 && (
+        <div>
+          <h2>ML Recommendations</h2>
+          <div>
+            {recommendations.map((rec, idx) => (
+              <div key={idx} className={`ticker-container ${rec.recommendation}`}>
+                <h3>{rec.symbol}</h3>
+
+                <span className="recommendation">
+                  {rec.recommendation}
+                </span>
+
+                <p>
+                  Confidence: <b>{(rec.confidence * 100).toFixed(1)}%</b>
+                </p>
+
+                <p className="accuracy">
+                  Model accuracy: {(rec.model_accuracy * 100).toFixed(1)}%
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
