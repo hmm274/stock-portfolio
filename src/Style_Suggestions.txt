@@ -1,0 +1,23 @@
+make error message for login signup red
+find a better font
+remove border on login-box
+make everything visible in one scene
+log out button to top right
+change align, features left align
+make news more spread out
+make news heading bit bigger
+make titles and text slightly bigger
+make slogan definitely bigger
+switch from dark or light mode
+buttons dont look nice
+make view portfolio more colorful and bright
+change hyphen in publish date to slash
+left align
+change find a ticker in button
+change placeholder of search to include 'search for ticker', suggested tickers
+vertical grid of boxes
+add left arrow to search
+add person icon
+change add to plus
+change remove to minus
+change heading to #ff9557
