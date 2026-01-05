@@ -11,10 +11,9 @@ from sklearn.utils.class_weight import compute_class_weight
 
 app = FastAPI()
 
-# Allow React to call this backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # later you can restrict this
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,12 +49,12 @@ def recommend(symbols: list[str]):
         # ===== TARGET =====
         df["future_return"] = df["Close"].shift(-30) / df["Close"] - 1
 
-        upper = df["future_return"].quantile(0.7)
-        lower = df["future_return"].quantile(0.3)
+        BUY_TH = 0.05
+        SELL_TH = -0.05
 
-        df["target"] = 1  # HOLD
-        df.loc[df["future_return"] > upper, "target"] = 2  # BUY
-        df.loc[df["future_return"] < lower, "target"] = 0  # SELL
+        df["target"] = 1
+        df.loc[df["future_return"] >= BUY_TH, "target"] = 2
+        df.loc[df["future_return"] <= SELL_TH, "target"] = 0
 
         df = df.dropna()
 
@@ -70,6 +69,7 @@ def recommend(symbols: list[str]):
             ]
         ]
         y = df["target"]
+        print(symbol, y.value_counts(normalize=True))
 
         # ===== TRAIN / TEST SPLIT =====
         X_train, X_test, y_train, y_test = train_test_split(
@@ -94,11 +94,14 @@ def recommend(symbols: list[str]):
             activation="relu",
             alpha=0.0005,
             learning_rate_init=0.001,
-            max_iter=800,
+            max_iter=2000,
+            early_stopping=True,
+            validation_fraction=0.15,
+            n_iter_no_change=20,
             random_state=42,
         )
 
-        model.fit(X_train, y_train)
+        model.fit(X_train, y_train, sample_weight=np.vectorize(class_weights.get)(y_train))
 
         # ===== ACCURACY =====
         acc = accuracy_score(y_test, model.predict(X_test))
@@ -117,5 +120,4 @@ def recommend(symbols: list[str]):
             "confidence": round(confidence, 3),
             "model_accuracy": round(acc, 3),
         })
-
     return {"recommendations": results}

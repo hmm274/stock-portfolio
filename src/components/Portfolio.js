@@ -14,7 +14,6 @@ import {
 } from 'chart.js';
 import axios from 'axios';
 
-// Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler);
 
 const API_KEY = process.env.REACT_APP_ALPHAVANTAGE_KEY;
@@ -27,9 +26,10 @@ const Portfolio = () => {
   const [chartsData, setChartsData] = useState({});
   const [recLoading, setRecLoading] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
+  const [genLoading, setGenLoading] = useState(false);
+  const [general, setGeneral] = useState([]);
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Fetch the portfolio tickers when the component mounts
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
@@ -81,7 +81,6 @@ const Portfolio = () => {
               };
             }
 
-            // ⏱️ RATE LIMIT SAFETY
             await sleep(1200);
 
           } catch (err) {
@@ -89,7 +88,6 @@ const Portfolio = () => {
           }
         }
 
-        // ✅ SET ALL CHARTS AT ONCE
         setChartsData(results);
         setLoading(false);
 
@@ -102,10 +100,8 @@ const Portfolio = () => {
     fetchPortfolio();
   }, []);
 
-  // Handle loading state
   if (loading) return <p>Loading your portfolio...</p>;
 
-  // Handle error state
   if (error) return <p>{error}</p>;
 
   const sendSymbolsToBackend = async () => {
@@ -163,7 +159,7 @@ const Portfolio = () => {
                             maintainAspectRatio: true,
                             plugins: {
                             legend: {
-                                display: false, // Remove chart legend
+                                display: false,
                             },
                             tooltip: {
                                 enabled: false
@@ -171,10 +167,10 @@ const Portfolio = () => {
                             },
                             scales: {
                             x: {
-                                display: false, // Hide X axis
+                                display: false,
                             },
                             y: {
-                                display: false, // Hide Y axis
+                                display: false,
                             },
                             },
                         }}
@@ -210,15 +206,12 @@ const Portfolio = () => {
             {recommendations.map((rec, idx) => (
               <div key={idx} className={`ticker-container ${rec.recommendation}`}>
                 <h3>{rec.symbol}</h3>
-
                 <span className="recommendation">
                   {rec.recommendation}
                 </span>
-
                 <p>
                   Confidence: <b>{(rec.confidence * 100).toFixed(1)}%</b>
                 </p>
-
                 <p className="accuracy">
                   Model accuracy: {(rec.model_accuracy * 100).toFixed(1)}%
                 </p>

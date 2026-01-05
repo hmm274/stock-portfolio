@@ -10,26 +10,18 @@ const Homepage = () => {
     const [name, setName] = useState("Guest");
 
     useEffect(() => {
-        // Fetch the session to get the user
         const fetchSession = async () => {
             const { data: { session }, error } = await supabase.auth.getSession();
             
             if (error) {
                 console.error('Error fetching session:', error);
             } else {
-                console.log("Fetched session:", session); // Check if session is being fetched correctly
                 setCurrentUser(session?.user);
     
                 if (session?.user) {
-                    // Fetch the user's name from the database
                     const nameData = await getUserDetails("name");
-                    
-                    console.log("User name data:", nameData); // Check what data is returned
-                    
-                    // Check if we got the name data and set it
                     if (nameData && nameData.length > 0 && nameData[0]?.name) {
                         setName(nameData[0].name.charAt(0).toUpperCase() + nameData[0].name.slice(1));
-                        console.log("Name set to:", nameData[0].name); // Ensure name is set correctly
                     }
                 }
             }

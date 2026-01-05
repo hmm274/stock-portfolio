@@ -15,13 +15,10 @@ const getUserDetails = async (columnName) => {
   const user = session?.user;
 
   if (user) {
-    // Query the database to get the specified column for the current user
     const { data, error } = await supabase
-      .from('users') // Replace 'users' with your table name
-      .select(columnName) // Select only the column passed as a parameter
-      .eq('id', user.id); // Query based on user's ID
-
-    console.log("Supabase query result:", data); // Add this log to see the output
+      .from('users')
+      .select(columnName)
+      .eq('id', user.id);
 
     if (error) {
       console.error('Error fetching user details:', error);

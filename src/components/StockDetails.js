@@ -25,14 +25,13 @@ const StockDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chartData, setChartData] = useState({});
-  const initialTimeframe = '1day'; // remove intraday
+  const initialTimeframe = '1day';
   const [timeFrame, setTimeFrame] = useState(initialTimeframe);
   const [newsData, setNewsData] = useState([]);
   const [priceDifference, setPriceDifference] = useState(null);
   const [stockAdded, setStockAdded] = useState(false);
   const [user, setUser] = useState(null);
 
-  // Portfolio check
   const checkIfStockIsAdded = useCallback(async (userId) => {
     const { data, error } = await supabase
       .from('portfolio')
@@ -54,7 +53,6 @@ const StockDetails = () => {
     getUser();
   }, [symbol, checkIfStockIsAdded]);
 
-  // Add / Remove stock
   const addStock = async () => {
     if (!user) return;
     const { error } = await supabase
@@ -72,7 +70,6 @@ const StockDetails = () => {
     if (!error) setStockAdded(false);
   };
 
-  // Fetch stock data (only daily/weekly)
   const fetchStockData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -105,7 +102,6 @@ const StockDetails = () => {
     }
   }, [symbol, timeFrame]);
 
-  // Prepare chart
   const prepareChartData = (timeSeries) => {
     const dates = Object.keys(timeSeries).slice(0, 30).reverse();
     const prices = dates.map(date => parseFloat(timeSeries[date]['4. close']));
@@ -127,7 +123,6 @@ const StockDetails = () => {
     });
   };
 
-  // Fetch news
   const fetchNewsData = useCallback(async () => {
     const newsUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${API_KEY}`;
     try {
@@ -158,11 +153,10 @@ const StockDetails = () => {
     return `${year}-${month}-${day} ${time.slice(0,2)}:${time.slice(2)}`;
   };
 
-  // Debounced fetch effect
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchStockData();
-    }, 1200); // 1.2s to stay under free tier limit
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, [fetchStockData]);

@@ -20,7 +20,6 @@ const Login = () => {
     }
     if (error) setError(error.message);
     else{
-        alert('Login successful!');
         navigate('/');
     };
   };
