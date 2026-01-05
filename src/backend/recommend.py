@@ -69,7 +69,6 @@ def recommend(symbols: list[str]):
             ]
         ]
         y = df["target"]
-        print(symbol, y.value_counts(normalize=True))
 
         # ===== TRAIN / TEST SPLIT =====
         X_train, X_test, y_train, y_test = train_test_split(
