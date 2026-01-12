@@ -26,8 +26,6 @@ const Portfolio = () => {
   const [chartsData, setChartsData] = useState({});
   const [recLoading, setRecLoading] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
-  const [genLoading, setGenLoading] = useState(false);
-  const [general, setGeneral] = useState([]);
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   useEffect(() => {
