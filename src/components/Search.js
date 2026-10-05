@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const API_KEY = process.env.REACT_APP_ALPHAVANTAGE_KEY;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Search = () => {
     const [symbol, setSymbol] = useState("");
@@ -22,7 +22,7 @@ const Search = () => {
         setLoading(true);
         setStatement(`Searching for ${query}...`);
 
-        const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${query}&apikey=${API_KEY}`;
+        const url = `${BACKEND_URL}/stocks/search?keywords=${encodeURIComponent(query)}`;
 
         try {
             const response = await axios.get(url);

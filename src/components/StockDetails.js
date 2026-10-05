@@ -17,7 +17,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-const API_KEY = process.env.REACT_APP_ALPHAVANTAGE_KEY;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const StockDetails = () => {
   const { symbol } = useParams();
@@ -73,8 +73,8 @@ const StockDetails = () => {
   const fetchStockData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const functionType = timeFrame === '1week' ? 'TIME_SERIES_WEEKLY' : 'TIME_SERIES_DAILY';
-    const url = `https://www.alphavantage.co/query?function=${functionType}&symbol=${symbol}&apikey=${API_KEY}`;
+    const timeframe = timeFrame === '1week' ? 'weekly' : 'daily';
+    const url = `${BACKEND_URL}/stocks/${encodeURIComponent(symbol)}/prices?timeframe=${timeframe}`;
 
     try {
       const response = await axios.get(url);
@@ -124,7 +124,7 @@ const StockDetails = () => {
   };
 
   const fetchNewsData = useCallback(async () => {
-    const newsUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${API_KEY}`;
+    const newsUrl = `${BACKEND_URL}/news?symbol=${encodeURIComponent(symbol)}`;
     try {
       const response = await axios.get(newsUrl);
       const data = response.data;

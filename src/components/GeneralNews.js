@@ -12,7 +12,8 @@ const formatArticleDate = (rawDate) => {
 };
 
 const fetchGeneralNews = async () => {
-  const newsUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&apikey=${API_KEY}`;
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const newsUrl = `${BACKEND_URL}/news`;
 
   try {
     const response = await axios.get(newsUrl);

@@ -16,7 +16,6 @@ import axios from 'axios';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler);
 
-const API_KEY = process.env.REACT_APP_ALPHAVANTAGE_KEY;
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Portfolio = () => {
@@ -62,7 +61,7 @@ const Portfolio = () => {
 
         for (const { stock_symbol } of data) {
           try {
-            const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stock_symbol}&apikey=${API_KEY}`;
+            const url = `${BACKEND_URL}/stocks/${encodeURIComponent(stock_symbol)}/prices?timeframe=daily`;
             const response = await axios.get(url);
             const timeSeries = response.data['Time Series (Daily)'];
 
