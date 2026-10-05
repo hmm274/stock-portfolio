@@ -9,6 +9,9 @@ from sklearn.metrics import accuracy_score
 from sklearn.utils.class_weight import compute_class_weight
 import requests
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ALPHAVANTAGE_KEY = os.getenv("ALPHAVANTAGE_KEY")
 

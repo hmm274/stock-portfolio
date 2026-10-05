@@ -38,7 +38,7 @@ const Homepage = () => {
     return (
         <div className="homepage">
             <h1>Welcome to Your Stock Portfolio, {name}!</h1>
-            <p>Manage your investments and track stock prices in real-time.</p>
+            <p>Track stocks, explore market data, and get data-driven insights.</p>
 
             <div className="homepage-links">
                 {currentUser ? (
