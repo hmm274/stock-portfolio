@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_KEY = process.env.REACT_APP_ALPHAVANTAGE_KEY;
-
 const formatArticleDate = (rawDate) => {
   const year = rawDate.slice(0, 4);
   const month = rawDate.slice(4, 6);
