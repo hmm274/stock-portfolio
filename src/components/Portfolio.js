@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import supabase from './SupabaseClient'; // Import your Supabase client
+import supabase from './SupabaseClient';
 import { Link } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
 import {
@@ -17,6 +17,7 @@ import axios from 'axios';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler);
 
 const API_KEY = process.env.REACT_APP_ALPHAVANTAGE_KEY;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Portfolio = () => {
   const hasFetchedRef = useRef(false);
@@ -108,7 +109,7 @@ const Portfolio = () => {
 
       const symbols = tickers.map(t => t.stock_symbol.toUpperCase());
 
-      const response = await fetch("http://localhost:8000/recommend", {
+      const response = await fetch(`${BACKEND_URL}/recommend`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
