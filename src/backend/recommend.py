@@ -15,6 +15,24 @@ ALPHAVANTAGE_KEY = os.getenv("ALPHAVANTAGE_KEY")
 if not ALPHAVANTAGE_KEY:
     raise RuntimeError("ALPHAVANTAGE_KEY is not configured")
 
+def handle_alpha_vantage_response(response):
+    response.raise_for_status()
+    data = response.json()
+
+    if "Information" in data:
+        raise HTTPException(
+            status_code=429,
+            detail="Market data API rate limit reached. Please try again later."
+        )
+
+    if "Error Message" in data:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to retrieve market data."
+        )
+
+    return data
+
 app = FastAPI()
 
 app.add_middleware(
@@ -44,8 +62,7 @@ def search_stocks(keywords: str):
         timeout=10,
     )
 
-    response.raise_for_status()
-    return response.json()
+    return handle_alpha_vantage_response(response)
 
 @app.get("/stocks/{symbol}/prices")
 def stock_prices(symbol: str, timeframe: str = "daily"):
@@ -65,8 +82,7 @@ def stock_prices(symbol: str, timeframe: str = "daily"):
         timeout=10,
     )
 
-    response.raise_for_status()
-    return response.json()
+    return handle_alpha_vantage_response(response)
 
 @app.get("/news")
 def news(symbol: str | None = None):
@@ -84,8 +100,7 @@ def news(symbol: str | None = None):
         timeout=10,
     )
 
-    response.raise_for_status()
-    return response.json()
+    return handle_alpha_vantage_response(response)
 
 @app.post("/recommend")
 def recommend(symbols: list[str]):
