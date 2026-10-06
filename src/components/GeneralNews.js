@@ -28,7 +28,14 @@ const fetchGeneralNews = async () => {
       return [];
     }
   } catch (error) {
-    throw new Error('Error fetching general news: ' + error.message);
+    if (error.response?.status === 429) {
+      throw new Error('Market data API rate limit reached. Please try again later.');
+    }
+
+    throw new Error(
+      error.response?.data?.detail ||
+      'Unable to load market news. Please try again later.'
+    );
   }
 };
 

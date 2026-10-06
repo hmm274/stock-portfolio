@@ -27,6 +27,7 @@ const Portfolio = () => {
   const [recLoading, setRecLoading] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const [recError, setRecError] = useState(null);
 
   useEffect(() => {
     if (hasFetchedRef.current) return;
@@ -83,6 +84,13 @@ const Portfolio = () => {
 
           } catch (err) {
             console.error(`Error fetching ${stock_symbol}`, err);
+
+            results[stock_symbol] = {
+              error:
+                err.response?.status === 429
+                  ? 'Market data API rate limit reached.'
+                  : err.response?.data?.detail || 'Price data unavailable.'
+            };
           }
         }
 
@@ -105,6 +113,7 @@ const Portfolio = () => {
   const sendSymbolsToBackend = async () => {
     try {
       setRecLoading(true);
+      setRecError(null);
 
       const symbols = tickers.map(t => t.stock_symbol.toUpperCase());
 
@@ -117,9 +126,20 @@ const Portfolio = () => {
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || 'Unable to generate recommendations.'
+        );
+      }
+
       setRecommendations(data.recommendations || []);
+
     } catch (err) {
       console.error(err);
+      setRecError(
+        err.message || 'Unable to generate recommendations. Please try again later.'
+      );
     } finally {
       setRecLoading(false);
     }
@@ -131,10 +151,15 @@ const Portfolio = () => {
       {tickers.length > 0 ? (
         <div>
           {tickers.map((ticker, index) => (
-            <Link to={"/stock/"+ticker.stock_symbol.toUpperCase()}>
-                <div key={index} className="ticker-container">
+          <Link
+            key={ticker.stock_symbol}
+            to={"/stock/" + ticker.stock_symbol.toUpperCase()}
+          >
+            <div className="ticker-container">
                 <b>{ticker.stock_symbol.toUpperCase()}</b>
-                {chartsData[ticker.stock_symbol] ? (
+                {chartsData[ticker.stock_symbol]?.error ? (
+                    <p>{chartsData[ticker.stock_symbol].error}</p>
+                  ) : chartsData[ticker.stock_symbol] ? (
                     <div>
                     <div className="chart-wrapper">
                         <Line
@@ -193,10 +218,14 @@ const Portfolio = () => {
       )}
       <br />
       <Link to="/search">Find a ticker</Link> <br />
-      <button className="ml-button" onClick={sendSymbolsToBackend}>
-        Generate ML Recommendations
+      <button
+        className="ml-button"
+        onClick={sendSymbolsToBackend}
+        disabled={recLoading || tickers.length === 0}
+      >
+        {recLoading ? 'Generating...' : 'Generate ML Recommendations'}
       </button>
-      {recLoading && <p>Running ML model…</p>}
+      {recError && <p>{recError}</p>}
       {recommendations.length > 0 && (
         <div>
           <h2>ML Recommendations</h2>

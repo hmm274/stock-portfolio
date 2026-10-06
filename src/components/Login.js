@@ -1,51 +1,85 @@
 import React, { useState } from 'react';
 import supabase from './SupabaseClient';
-import {Link, useNavigate} from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if(email===""||password===""){
-        setError("Please fill out all fields");
-    }
-    if (error) setError(error.message);
-    else{
-        navigate('/');
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (email === '' || password === '') {
+            setError('Please fill out all fields');
+            return;
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) {
+            setError(error.message);
+        } else {
+            navigate('/');
+        }
     };
-  };
 
-  return (
-    <div className="login-box">
-        <form onSubmit={handleLogin}>
-            <h1>Welcome to your Stock Portfolio!</h1>
-            <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            /><br />
-            <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <p>Don't have an account? <br /> Sign up <Link to="/Signup">here</Link></p>
-            <button type="submit">Login</button>
-            {error && <p>{error}</p>}
-        </form>
-    </div>
-  );
+    const fillDemoCredentials = () => {
+        setEmail('guest@demo.com');
+        setPassword('guest123');
+        setError('');
+    };
+
+    return (
+        <div className="login-box">
+            <form onSubmit={handleLogin}>
+                <h1>Welcome to your Stock Portfolio!</h1>
+
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+                <br />
+
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+
+                <p>
+                    Don't have an account?
+                    <br />
+                    Sign up <Link to="/Signup">here</Link>
+                </p>
+
+                <button type="submit">Login</button>
+
+                <div className="demo-login">
+                    <p>
+                        <strong>Demo Account</strong>
+                        <br />
+                        Use the demo account to explore the application without
+                        creating an account.
+                    </p>
+
+                    <button type="button" onClick={fillDemoCredentials}>
+                        Fill Demo Credentials
+                    </button>
+                </div>
+
+                {error && <p>{error}</p>}
+            </form>
+        </div>
+    );
 };
 
 export default Login;

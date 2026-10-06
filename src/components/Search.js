@@ -28,10 +28,7 @@ const Search = () => {
             const response = await axios.get(url);
             const data = response.data;
 
-            if (data["Information"]) {
-                setStatement("API call limit reached. Please try later.");
-                setSearchResults([]);
-            } else if (data && data.bestMatches && data.bestMatches.length > 0) {
+            if (data && data.bestMatches && data.bestMatches.length > 0) {
                 setSearchResults(data.bestMatches);
                 setStatement("");
             } else {
@@ -39,7 +36,15 @@ const Search = () => {
                 setStatement(`No results found for ${query}`);
             }
         } catch (error) {
-            setStatement(`Error fetching data: ${error.message}`);
+            if (error.response?.status === 429) {
+                setStatement("Market data API rate limit reached. Please try again later.");
+            } else {
+                setStatement(
+                    error.response?.data?.detail ||
+                    "Unable to search for stocks. Please try again later."
+                );
+            }
+
             setSearchResults([]);
         } finally {
             setLoading(false);

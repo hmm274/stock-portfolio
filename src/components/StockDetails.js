@@ -31,6 +31,8 @@ const StockDetails = () => {
   const [priceDifference, setPriceDifference] = useState(null);
   const [stockAdded, setStockAdded] = useState(false);
   const [user, setUser] = useState(null);
+  const [newsError, setNewsError] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(false);
 
   const checkIfStockIsAdded = useCallback(async (userId) => {
     const { data, error } = await supabase
@@ -80,12 +82,6 @@ const StockDetails = () => {
       const response = await axios.get(url);
       const data = response.data;
 
-      if (data['Error Message'] || data['Information']) {
-        setError(data['Error Message'] || data['Information']);
-        setLoading(false);
-        return;
-      }
-
       const timeSeriesKey = timeFrame === '1week' ? 'Weekly Time Series' : 'Time Series (Daily)';
       if (!data[timeSeriesKey]) {
         setError('No time series data returned.');
@@ -97,7 +93,15 @@ const StockDetails = () => {
       prepareChartData(data[timeSeriesKey]);
       setLoading(false);
     } catch (err) {
-      setError('Error fetching stock data: ' + err.message);
+      if (err.response?.status === 429) {
+        setError('Market data API rate limit reached. Please try again later.');
+      } else {
+        setError(
+          err.response?.data?.detail ||
+          'Unable to load stock data. Please try again later.'
+        );
+      }
+
       setLoading(false);
     }
   }, [symbol, timeFrame]);
@@ -125,6 +129,10 @@ const StockDetails = () => {
 
   const fetchNewsData = useCallback(async () => {
     const newsUrl = `${BACKEND_URL}/news?symbol=${encodeURIComponent(symbol)}`;
+
+    setNewsLoading(true);
+    setNewsError(null);
+
     try {
       const response = await axios.get(newsUrl);
       const data = response.data;
@@ -136,12 +144,25 @@ const StockDetails = () => {
           url: article.url,
           date: formatArticleDate(article.time_published)
         }));
+
         setNewsData(formattedNews);
       } else {
         setNewsData([]);
+        setNewsError('No news articles were found for this stock.');
       }
     } catch (err) {
       setNewsData([]);
+
+      if (err.response?.status === 429) {
+        setNewsError('Market data API rate limit reached. Please try again later.');
+      } else {
+        setNewsError(
+          err.response?.data?.detail ||
+          'Unable to load news. Please try again later.'
+        );
+      }
+    } finally {
+      setNewsLoading(false);
     }
   }, [symbol]);
 
@@ -209,8 +230,13 @@ const StockDetails = () => {
         <hr />
         <div className="news-section">
           <h2>Relevant News</h2>
-          <button onClick={fetchNewsData}>Load news</button>
-          {newsData.length === 0 ? <p>Click “Load news” to fetch related articles.</p> :
+          <button onClick={fetchNewsData} disabled={newsLoading}>
+            {newsLoading ? 'Loading...' : 'Load news'}
+          </button>
+          {newsError && <p>{newsError}</p>}
+          {(newsData.length === 0 && !newsLoading && !newsError) ? (
+              <p>Click “Load news” to fetch related articles.</p>
+            ) : (newsData.length > 0 ? (
             <ul>
               {newsData.map((article, index) => (
                 <li key={index}>
@@ -219,7 +245,7 @@ const StockDetails = () => {
                   <p><strong>Published on:</strong> {article.date}</p>
                 </li>
               ))}
-            </ul>
+            </ul>) : null)
           }
         </div>
       </div>
