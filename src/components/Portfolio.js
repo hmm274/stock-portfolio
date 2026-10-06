@@ -78,8 +78,12 @@ const Portfolio = () => {
                 priceDifference: allPrices[allPrices.length - 1] - allPrices[0],
                 currentPrice: allPrices[allPrices.length - 1]
               };
+            } else {
+              results[stock_symbol] = {
+                error: 'Price data unavailable.'
+              };
             }
-
+            
             await sleep(1200);
 
           } catch (err) {

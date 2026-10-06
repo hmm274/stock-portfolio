@@ -366,7 +366,7 @@ The production frontend communicates with the Render-hosted FastAPI API. CORS is
 - Add portfolio quantities, purchase prices, profit/loss calculations, and overall portfolio performance tracking.
 - Expand the recommendation model with additional technical indicators and evaluate alternative machine learning models.
 - Add benchmark comparisons and more detailed model evaluation metrics.
-- Improve error and loading states for API rate limits, unavailable market data, and backend startup delays.
+- Improve loading states for backend startup delays.
 - Add automated frontend and backend tests.
 - Add support for additional portfolio analytics and visualizations.
 
